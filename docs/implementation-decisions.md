@@ -13,3 +13,7 @@ The user authorized completing unfinished Figma screens in code and accepted the
 - Missing form layouts follow the recorded visual language. Original large design assets and exact typography remain unavailable; the supplied recording logo is used, and the welcome illustration is an approximation.
 
 These decisions describe the implemented interpretation and its limits; they do not claim official government accounting compliance or exact conversion of uninspected Figma frames.
+
+## Requested intelligent component and public feedback
+
+The user requested generated project suggestions and a Youth/Resident suggestion/comment box. Their teacher has not specified AI/ML. The implementation therefore adds explainable rule-based ranking and editable draft generation, without external services or claims of ML. It replaces the earlier history-list-only suggestion panel. Guest/resident feedback is private to Admin/Chairperson for moderation; it is not automatically verified or fed into the generator. See recommendations.md for rules and migration instructions.

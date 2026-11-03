@@ -73,11 +73,11 @@ function upload(string $field,bool $required=false,bool $pdf=false): ?string {
 function removeNewUploads(): void {global $config; foreach($GLOBALS['new_uploads']??[] as $name) @unlink($config['storage'].'/'.$name);}
 function roleMenus(string $role): array {
     return match($role) {
-        'admin'=>['dashboard'=>'Dashboard','users'=>'Manage Users','settings'=>'Settings','audit'=>'Audit Logs','reports'=>'Reports'],
-        'chairperson'=>['dashboard'=>'Dashboard','profile'=>'Edit Profile','proposals'=>'Proposals','monitoring'=>'Monitoring','approvals'=>'Fund Approval','reports'=>'Reports'],
+        'admin'=>['dashboard'=>'Dashboard','users'=>'Manage Users','settings'=>'Settings','audit'=>'Audit Logs','reports'=>'Reports','feedback'=>'Community Feedback'],
+        'chairperson'=>['dashboard'=>'Dashboard','profile'=>'Edit Profile','proposals'=>'Proposals','monitoring'=>'Monitoring','approvals'=>'Fund Approval','reports'=>'Reports','feedback'=>'Community Feedback'],
         'treasurer'=>['dashboard'=>'Dashboard','profile'=>'Edit Profile','allocation'=>'Allocation','expenses'=>'Expenses','balance'=>'Fund Balance','transactions'=>'Transactions'],
         'official'=>['dashboard'=>'Dashboard','profile'=>'Edit Profile','projects'=>'Projects','summary'=>'Fund Summary'],
-        default=>['dashboard'=>'Dashboard','projects'=>'View Projects','summary'=>'Fund Summary']
+        default=>['dashboard'=>'Dashboard','projects'=>'View Projects','summary'=>'Fund Summary','feedback'=>'Suggestions & Comments']
     };
 }
 function projectList(bool $public=false): array {

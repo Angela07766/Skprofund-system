@@ -25,9 +25,49 @@ function handleAction(): void {
         redirect($logged['must_change_password']?'profile':'dashboard');
     }
     if($action==='logout') { if($u) audit('Logout','System','User logged out.'); $_SESSION=[]; session_regenerate_id(true); redirect('welcome'); }
+    if($action==='submit_feedback') {
+        if($u && $u['role']!=='resident')throw new DomainException('Use the staff inbox to review feedback.');
+        if($u && $u['must_change_password'])throw new DomainException('Change your temporary password first.');
+        $type=input('feedback_type',20);if(!in_array($type,['Suggestion','Comment'],true))throw new DomainException('Choose a valid message type.');
+        $subject=input('subject',150);$message=input('message',2000);if(strlen($message)<10)throw new DomainException('Write a message of at least 10 characters.');
+        $name=input('display_name',100,false)?:'Anonymous';
+        $projectId=isset($_POST['project_id']) && $_POST['project_id']!==''?idInput('project_id'):null;
+        $client=hash('sha256','skprofund-feedback|'.($_SERVER['REMOTE_ADDR']??'unknown'));
+        transact(function()use($type,$subject,$message,$name,$projectId,$client,$u){
+            query('DELETE FROM feedback_rate_limits WHERE window_started < DATE_SUB(NOW(), INTERVAL 2 DAY)');
+            query('INSERT IGNORE INTO feedback_rate_limits(client_hash,window_started) VALUES(?,NOW())',[$client]);
+            $limit=one('SELECT *,window_started > DATE_SUB(NOW(),INTERVAL 10 MINUTE) in_window FROM feedback_rate_limits WHERE client_hash=? FOR UPDATE',[$client]);
+            if($limit['in_window'] && (int)$limit['attempts']>=5)throw new DomainException('Message limit reached. Please try again after ten minutes.');
+            if($projectId && !one('SELECT id FROM projects WHERE id=? AND published=1',[$projectId]))throw new DomainException('Choose a currently public project or a general message.');
+            query('INSERT INTO public_feedback(project_id,user_id,type,subject,message,display_name) VALUES(?,?,?,?,?,?)',[$projectId,$u['id']??null,$type,$subject,$message,$name]);
+            query('UPDATE feedback_rate_limits SET attempts=IF(window_started > DATE_SUB(NOW(),INTERVAL 10 MINUTE),attempts+1,1),window_started=IF(window_started > DATE_SUB(NOW(),INTERVAL 10 MINUTE),window_started,NOW()) WHERE client_hash=?',[$client]);
+        });flash('Your message was sent privately to the SK team. Thank you.');redirect('feedback');
+    }
     if(!$u) throw new DomainException('Please log in.');
     if($u['must_change_password'] && $action!=='password') throw new DomainException('Change your temporary password before continuing.');
     switch($action) {
+    case 'review_feedback':
+        allow(['admin','chairperson']);$id=idInput('id');$status=input('status',20);$notes=input('review_notes',2000,false);
+        if(!in_array($status,['New','Reviewed','Archived'],true))throw new DomainException('Choose a valid review status.');
+        transact(function()use($id,$status,$notes,$u){if(!one('SELECT id FROM public_feedback WHERE id=? FOR UPDATE',[$id]))throw new DomainException('Message not found.');query('UPDATE public_feedback SET status=?,review_notes=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?',[$status,$notes,$u['id'],$id]);audit('Review','Community Feedback','Message #'.$id.' marked '.$status);});flash('Feedback review saved.');redirect('feedback');
+    case 'generate_ideas':
+        allow(['official']);require_once ROOT.'/app/recommendations.php';
+        $need=input('need',2000);if(strlen($need)<10)throw new DomainException('Describe the need in at least 10 characters.');
+        $ceiling=cents(input('budget_ceiling',30));$count=idInput('beneficiary_count');if($count>100000)throw new DomainException('Use at most 100,000 beneficiaries.');
+        $criteria=['need'=>$need,'ceiling'=>$ceiling,'beneficiaries'=>input('beneficiaries',255),'beneficiary_count'=>$count,'category_id'=>idInput('category_id'),'source_id'=>idInput('source_id')];
+        $generated=generateProjectIdeas($criteria);
+        $_SESSION['suggestions']=['uid'=>$u['id'],'created'=>time(),'criteria'=>$criteria,'generated'=>$generated];
+        audit('Generate suggestions','Projects','Generated '.count($generated['ideas']).' ranked project ideas.');
+        redirect('projects',['suggestions'=>1]);
+    case 'use_suggestion':
+        allow(['official']);require_once ROOT.'/app/recommendations.php';$key=input('suggestion_key',100);
+        $saved=$_SESSION['suggestions']??null;
+        if(!$saved || (int)$saved['uid']!==(int)$u['id'] || time()-$saved['created']>1800)throw new DomainException('Suggestions expired. Generate them again.');
+        $idea=null;foreach($saved['generated']['ideas'] as $candidate)if($candidate['key']===$key)$idea=$candidate;
+        if(!$idea)throw new DomainException('Choose a suggestion from your current results.');
+        $_SESSION['proposal_draft']=['uid'=>$u['id'],'created'=>time(),'fields'=>suggestionDraft($idea,$saved['criteria'])];
+        audit('Generate draft','Projects','Prepared an unsaved draft from '.$key.'.');
+        redirect('projects',['edit'=>'new','generated'=>1]);
     case 'password':
         if(!password_verify(input('current_password',200),$u['password_hash'])) throw new DomainException('Current password is incorrect.');
         $password=input('new_password',200); if(strlen($password)<12 || $password!==input('confirm_password',200)) throw new DomainException('Passwords must match and contain at least 12 characters.');
@@ -91,7 +131,7 @@ function handleAction(): void {
                 if(($p['budget_cents']>0 || one('SELECT id FROM fund_requests WHERE project_id=? OR from_project_id=? LIMIT 1',[$id,$id])) && ((int)$values[1]!== (int)$p['source_id'] || (int)$values[0]!== (int)$p['category_id'])) throw new DomainException('Category and fund source cannot change after financial requests exist.');
             } else {query('INSERT INTO projects(owner_id,category_id,source_id,title,description,location,committee,beneficiaries,beneficiary_count,start_date,end_date,planned_cents,photo_path,remarks,publication_requested) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,\'\',1)',array_merge([$u['id']],$values,[$count,$start,$end,$planned,$photo]));$id=(int)db()->lastInsertId();}
             audit('Save','Projects','Submitted project #'.$id.' for review.');
-        });flash('Project saved and submitted for Chairperson review.');redirect('projects');
+        });unset($_SESSION['proposal_draft']);flash('Project saved and submitted for Chairperson review.');redirect('projects');
     case 'delete_project':
         $id=idInput('id');transact(function()use($id){$p=ownProject($id);if($p['review_status']!=='Pending' || $p['published'] || one('SELECT id FROM fund_requests WHERE project_id=? OR from_project_id=? LIMIT 1',[$id,$id]) || one('SELECT id FROM progress_logs WHERE project_id=? LIMIT 1',[$id]))throw new DomainException('Only untouched pending proposals may be deleted. Keep historical records.');query('DELETE FROM projects WHERE id=?',[$id]);audit('Delete','Projects','Deleted pending proposal #'.$id);});flash('Pending proposal deleted.');redirect('projects');
     case 'progress':

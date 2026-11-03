@@ -8,3 +8,7 @@ document.querySelectorAll('[data-print]').forEach(button=>button.addEventListene
 document.querySelectorAll('input[type=file]').forEach(input=>input.addEventListener('change',()=>{input.setCustomValidity(input.files[0]?.size>5*1024*1024?'Maximum file size is 5 MB.':'');input.reportValidity();}));
 // Prevent accidental repeated submission; server-side transactions enforce approval integrity.
 document.querySelectorAll('form[method=post]').forEach(form=>form.addEventListener('submit',()=>{if(form.dataset.confirm && form.dataset.confirmed!=='yes')return;setTimeout(()=>form.querySelectorAll('button[type=submit],button:not([type])').forEach(button=>button.disabled=true),0);}));
+
+const query=new URLSearchParams(window.location.search);
+const focusSection=query.has('generated')?document.getElementById('proposal-form'):query.has('suggestions')?document.getElementById('project-generator'):null;
+if(focusSection){focusSection.scrollIntoView();focusSection.querySelector('h2')?.focus({preventScroll:true});}

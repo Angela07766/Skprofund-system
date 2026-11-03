@@ -6,7 +6,7 @@ try {
         require ROOT.'/app/actions.php';
         try { handleAction(); } catch(DomainException $ex) {removeNewUploads();flash($ex->getMessage(),'error');}
         catch(PDOException $ex) {removeNewUploads();error_log('SK ProFund database error: '.$ex->getCode());flash('The record could not be saved. Check for duplicate values, referenced records, or conflicting updates.','error');}
-        redirect(in_array($page,['welcome','login','dashboard','profile','users','settings','audit','reports','proposals','monitoring','approvals','allocation','expenses','balance','transactions','projects','summary'],true)?$page:'dashboard');
+        redirect(in_array($page,['welcome','login','dashboard','profile','users','settings','audit','reports','proposals','monitoring','approvals','allocation','expenses','balance','transactions','projects','summary','feedback'],true)?$page:'dashboard');
     }
     $user=currentUser();$role=$user['role']??'public';
     if($user && $user['must_change_password'] && $page!=='profile')redirect('profile');
@@ -14,7 +14,7 @@ try {
     if($user && in_array($page,['welcome','login'],true))redirect('dashboard');
     $menu=roleMenus($role);if($user && $user['must_change_password'])$menu=['profile'=>'Edit Profile'];
     if(!in_array($page,['welcome','login'],true) && !isset($menu[$page]) && $page!=='profile') {http_response_code(403);$page='forbidden';}
-    if(!$user && !in_array($page,['welcome','login','dashboard','projects','summary'],true)) {http_response_code(403);$page='forbidden';}
+    if(!$user && !in_array($page,['welcome','login','dashboard','projects','summary','feedback'],true)) {http_response_code(403);$page='forbidden';}
     require ROOT.'/app/layout.php';
 } catch(DomainException $ex) {
     http_response_code(403); echo '<!doctype html><html lang="en"><meta charset="utf-8"><title>Access restricted</title><h1>Access restricted</h1><p>'.e($ex->getMessage()).'</p></html>';

@@ -43,6 +43,28 @@ Keep MySQL running. Open `http://127.0.0.1:8080`. PHP must have PDO MySQL and Fi
 
 For a hosted installation, point Apache's document root directly to **public/**. Root `.htaccess` blocks private directories as defense in depth for XAMPP; do not deploy using a web server that exposes the entire checkout. Use HTTPS for deployment. XAMPP is intended here for local development, not Internet hosting.
 
+## Updating an existing installation
+
+If you already imported the earlier schema, back up your database and private files, update the source files, select your existing `skprofund` database in phpMyAdmin, and import **`database/migrations/002_public_feedback.sql` once**. Do not re-import the full schema over an existing installation. The generator itself needs no new tables; this migration adds the community feedback inbox and rate-limit storage. Fresh installations use the full `database/schema.sql`, which already includes these tables.
+
+## Project suggestion and draft generator
+
+Sign in as an **SK Official**, open **Projects**, and find **Project Suggestion & Draft Generator**.
+
+1. Describe a specific youth need, such as reading tutoring or waste segregation.
+2. Select a configured category and fund source. Enter a budget ceiling, target beneficiaries and proposed count.
+3. Select **Generate Project Suggestions**. Up to five matching ideas are ranked with reasons and historical cost assumptions.
+4. Select **Generate Proposal Draft**. Review the prefilled title, objective, proposed activities, participants and planning amount; enter the actual location, schedule and implementing committee.
+5. Submit the reviewed proposal through the existing Chairperson approval process. Generation alone neither saves a project nor allocates/publishes funds.
+
+This is an **explainable rule-based recommender**, not AI/ML or an external chatbot. It uses relevant planning templates when there is no history, and completed, approved public history when available. Costs are not invented: a historical estimate is distinguished from the user's budget-ceiling placeholder. Unknown/custom categories require matching verified history rather than arbitrary guesses. Estimates and suggested activities need human scope/price checks. See [recommendations.md](docs/recommendations.md) for the algorithm and its limitations. Teacher/adviser acceptance of this approach should be confirmed if AI/ML is specifically required.
+
+## Youth/Resident suggestions and comments
+
+Open the public area and choose **Suggestions & Comments**. Guests and signed-in resident accounts can send a project suggestion or comment, optionally linked to a currently published project. Messages are private and go to **Community Feedback** for Admin/Chairperson review. Staff can mark them New, Reviewed or Archived and add internal notes; messages are not automatically published or used as verified needs by the generator. Officials can use needs communicated through the normal planning process as generator input.
+
+Inputs are length-limited and HTML-escaped. CSRF is checked and submissions are limited to five per ten minutes per connection, including guests; shared-network users can share a limit. Rate-limit keys store a hash of the connection address, not the raw address, and expired keys are removed during submissions. Guest names are self-reported. This is basic abuse protection, not a full CAPTCHA or moderation service. No mail notifications or public reply threads are included.
+
 ## Working workflow
 
 1. **Official:** create a project proposal with category, fund source, planned amount, schedule, committee, location and beneficiaries. Attach a project photo if available.
@@ -57,11 +79,11 @@ For a hosted installation, point Apache's document root directly to **public/**.
 
 ### Roles
 
-- **Admin:** user accounts, role assignment, categories, sources, audit filters, summary reports. Admin does not edit project finances or approve publication.
-- **Chairperson:** review proposals, remarks, publication, monitoring, financial approvals and reports; can view supporting receipts.
+- **Admin:** user accounts, role assignment, categories, sources, audit filters, summary reports and community feedback review. Admin does not edit project finances or approve publication.
+- **Chairperson:** review proposals, remarks, publication, monitoring, financial approvals, reports and community feedback review; can view supporting receipts.
 - **Treasurer:** record authorized funding, request allocation/realignment/disbursement, record/edit expenses and receipts, view balances and history.
-- **Official:** create/edit own proposals and record own progress; see own project fund totals and references from completed public project history.
-- **Youth/Residents:** read published project information and financial summaries. The public entry requires no account. Admin-created resident accounts are read-only and can maintain their own profiles.
+- **Official:** create/edit own proposals and record own progress; see own project fund totals; generate ranked project suggestions and editable proposal drafts.
+- **Youth/Residents:** read published project information and financial summaries; submit private suggestions/comments. The public entry requires no account. Admin-created resident accounts are read-only and can maintain their own profiles.
 
 Admin can add named roles using one of these five permission templates. Template permissions cannot be arbitrarily changed from the UI. System roles are retained; unused custom roles may be deleted. Deactivate users instead of deleting financial/audit history. The last active Admin is protected.
 
@@ -116,7 +138,11 @@ HTTP integration checks use only the Python standard library. Never seed a real 
 ```sh
 php tests/seed.php
 python3 tests/workflow.py
+php tests/recommendations.php
+python3 tests/intelligent_feedback.py
 ```
+
+Run the additional HTTP feature tests after workflow.py on the same disposable data. `tests/features_browser.py` exercises the new forms with Playwright/Chromium.
 
 The seed refuses databases whose names do not end in `_test`. Tests expect a freshly imported schema and mutate disposable records. They cover role pages, authorization, account activation, proposals, publication, allocations/releases, duplicate approvals, overspending, realignment, receipt upload validation/access, CSRF, escaping, password resets and audit events. Delete the test database and its upload directory when finished.
 

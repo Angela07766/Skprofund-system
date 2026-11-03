@@ -23,3 +23,11 @@ Validated in the cloud workspace using PHP 8.3 CLI with PDO MySQL, MariaDB 11.4,
 - Publication approval temporarily hides edited project information pending review; it does not retain a separate live published revision.
 
 See README.md for the reproducible XAMPP workflow and isolated-test instructions. Browser artifacts are local, ignored test outputs, not production records.
+
+## Recommendation generator and community feedback update
+
+- Existing 94 workflow checks rerun successfully on the updated fresh schema.
+- 21 pure recommendation checks: no-history templates, evidence-based ranking, participant-scaled historical estimates, median benchmark, budget exclusions, private/unapproved history exclusion, duplicate penalty, no-match handling, deterministic output, draft assumptions and invalid inputs.
+- 34 additional HTTP checks: generation/draft workflow, human submission, no implicit database/financial posting, authorization, cold-start assumptions, insufficient-funding warning, forged selection rejection, guest/resident feedback submission, staff review, stored-text escaping, private inbox boundaries, invalid project rejection, persistent message-rate limits and moderation audit.
+- New browser checks cover ranked suggestions, editable unsaved draft, required human-entered schedule/location, mobile feedback layout/privacy and staff inbox navigation.
+- Existing installation feedback migration is provided separately; full schema includes the new tables for fresh installs.

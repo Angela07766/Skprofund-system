@@ -6,7 +6,7 @@ function field(string $label,string $name,mixed $value='',string $type='text',bo
 }
 function textarea(string $label,string $name,mixed $value='',bool $required=true,int $max=5000): void {echo '<label>'.e($label).'<textarea name="'.e($name).'" maxlength="'.$max.'" '.($required?'required':'').'>'.e($value).'</textarea></label>';}
 function selectField(string $label,string $name,array $options,mixed $selected='',bool $required=true): void {
-    echo '<label>'.e($label).'<select name="'.e($name).'" '.($required?'required':'').'>';if($required)echo '<option value="">Select…</option>';
+    echo '<label>'.e($label).'<select aria-label="'.e($label).'" name="'.e($name).'" '.($required?'required':'').'>';if($required)echo '<option value="">Select…</option>';
     foreach($options as $key=>$value)echo '<option value="'.e($key).'" '.((string)$selected===(string)$key?'selected':'').'>'.e($value).'</option>';echo '</select></label>';
 }
 function options(string $table): array {return array_column(rows('SELECT id,name FROM '.$table.' ORDER BY name'),'name','id');}
