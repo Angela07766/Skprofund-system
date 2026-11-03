@@ -1,0 +1,7 @@
+# Defense in depth when the checkout is placed inside XAMPP htdocs.
+Options -Indexes
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?:app|bin|config|database|docs|tests|storage)(?:/|$) - [F,L]
+RewriteRule ^(?:\.git|\.env|Dockerfile|README\.md|\.gitignore|\.dockerignore)(?:/|$) - [F,L]
+</IfModule>
