@@ -49,12 +49,12 @@ If you already imported the earlier schema, back up your database and private fi
 
 ## Project suggestion and draft generator
 
-Sign in as an **SK Official**, open **Projects**, and find **Project Suggestion & Draft Generator**.
+Sign in as an **SK Official**, open **Projects**, and find **Suggested Proposals**.
 
 1. Describe a specific youth need, such as reading tutoring or waste segregation.
 2. Select a configured category and fund source. Enter a budget ceiling, target beneficiaries and proposed count.
-3. Select **Generate Project Suggestions**. Up to five matching ideas are ranked with reasons and historical cost assumptions.
-4. Select **Generate Proposal Draft**. Review the prefilled title, objective, proposed activities, participants and planning amount; enter the actual location, schedule and implementing committee.
+3. Select **Generate Suggested Proposals**. Up to five matching ideas are ranked with reasons and historical cost assumptions.
+4. Select **Use as Draft**. Review the prefilled title, objective, proposed activities, participants and planning amount; enter the actual location, schedule and implementing committee.
 5. Submit the reviewed proposal through the existing Chairperson approval process. Generation alone neither saves a project nor allocates/publishes funds.
 
 This is an **explainable rule-based recommender**, not AI/ML or an external chatbot. It uses relevant planning templates when there is no history, and completed, approved public history when available. Costs are not invented: a historical estimate is distinguished from the user's budget-ceiling placeholder. Unknown/custom categories require matching verified history rather than arbitrary guesses. Estimates and suggested activities need human scope/price checks. See [recommendations.md](docs/recommendations.md) for the algorithm and its limitations. Teacher/adviser acceptance of this approach should be confirmed if AI/ML is specifically required.

@@ -12,11 +12,11 @@ with sync_playwright() as p:
  page.goto(url+'?page=projects');generator=page.locator('#project-generator')
  generator.get_by_label('Youth need / problem to address').fill('Students need reading tutoring and mathematics practice.')
  generator.get_by_label('Category',exact=True).select_option('1');generator.get_by_label('Fund Source',exact=True).select_option('1');generator.get_by_label('Budget Ceiling (PHP)').fill('1000');generator.get_by_label('Proposed Beneficiary Count').fill('20');generator.get_by_label('Target Beneficiaries',exact=True).fill('Youth students')
- generator.get_by_role('button',name='Generate Project Suggestions',exact=True).click();page.wait_for_url('**suggestions=1')
- assert page.get_by_role('heading',name='Ranked Suggestions',exact=True).is_visible()
+ generator.get_by_role('button',name='Generate Suggested Proposals',exact=True).click();page.wait_for_url('**suggestions=1')
+ assert page.get_by_role('heading',name='Recommended Proposals',exact=True).is_visible()
  assert page.locator('body').evaluate('(el)=>el.scrollWidth<=innerWidth')
  generator=page.locator('#project-generator');generator.screenshot(path=str(out/'project-generator-desktop.png'))
- generator.get_by_role('button',name='Generate Proposal Draft',exact=True).first.click();page.wait_for_url('**generated=1')
+ generator.get_by_role('button',name='Use as Draft',exact=True).first.click();page.wait_for_url('**generated=1')
  assert page.get_by_role('heading',name='Generated Proposal Draft',exact=True).is_visible()
  assert page.get_by_label('Project Title',exact=True).input_value()=='Youth Learning Support Sessions'
  assert page.get_by_label('Start Date',exact=True).input_value()==''
